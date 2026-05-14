@@ -144,7 +144,37 @@ export default function App() {
         authState={authState}
         steps={steps}
       />
-      <main className="flex-1 overflow-auto">{renderPage()}</main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-auto">{renderPage()}</main>
+        <footer className="flex-shrink-0 border-t border-slate-200 bg-white px-5 py-2 flex items-center gap-6 text-xs text-slate-500">
+          <span>
+            Sending from:{' '}
+            {authState.authenticated ? (
+              <span className="font-semibold text-slate-800">{authState.email}</span>
+            ) : (
+              <span className="text-amber-600 font-medium">not connected</span>
+            )}
+          </span>
+          {selectedDraft && (
+            <>
+              <span className="text-slate-300">·</span>
+              <span>
+                Template:{' '}
+                <span className="font-semibold text-slate-800">{selectedDraft.subject}</span>
+              </span>
+            </>
+          )}
+          {getSelectedRows().length > 0 && (
+            <>
+              <span className="text-slate-300">·</span>
+              <span>
+                Recipients:{' '}
+                <span className="font-semibold text-slate-800">{getSelectedRows().length}</span>
+              </span>
+            </>
+          )}
+        </footer>
+      </div>
     </div>
   );
 }
