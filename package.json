@@ -34,7 +34,8 @@
       "output": "release"
     },
     "publish": {
-      "provider": "github"
+      "provider": "github",
+      "releaseType": "release"
     },
     "files": [
       "dist/**/*",
