@@ -10,14 +10,18 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            args: --mac
+            ext: dmg
+          - os: windows-latest
+            args: --win
+            ext: exe
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
@@ -28,15 +32,14 @@ jobs:
       - name: Build frontend
         run: npm run build
 
-      - name: Package Mac app
-        if: matrix.os == 'macos-latest'
-        run: npx electron-builder --mac --publish always
+      - name: Package app
+        run: npx electron-builder ${{ matrix.args }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Package Windows app
-        if: matrix.os == 'windows-latest'
-        run: npx electron-builder --win --publish always
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.${{ matrix.ext }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
