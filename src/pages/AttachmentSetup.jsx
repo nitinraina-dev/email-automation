@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FolderOpen, Paperclip, ChevronRight, ToggleLeft, ToggleRight, AlertCircle } from 'lucide-react';
 
-export default function AttachmentSetup({ navigate, config, onChange, rowCount }) {
+export default function AttachmentSetup({ navigate, config, onChange, rowCount, emailConfig, onEmailConfigChange, totalRows }) {
   const [folderFiles, setFolderFiles] = useState([]);
   const [folderError, setFolderError] = useState('');
 
@@ -17,8 +17,38 @@ export default function AttachmentSetup({ navigate, config, onChange, rowCount }
 
   const handleSelectFolder = async () => {
     const result = await window.api?.selectFolder();
-    if (!result?.canceled) {
-      onChange({ ...config, folderPath: result.path });
+    if (result?.canceled) return;
+
+    const folderPath = result.path;
+    const res = await window.api?.listFiles(folderPath);
+    const files = (res?.files || []).filter((f) => f.isFile);
+
+    // Try to detect prefix, number, extension from filenames matching: <prefix><number>.<ext>
+    const pattern = /^(.*?)(\d+)\.([^.]+)$/;
+    const matches = files.map((f) => f.name.match(pattern)).filter(Boolean);
+
+    if (matches.length > 0) {
+      // Use the most common prefix among matches
+      const prefixCounts = {};
+      for (const m of matches) {
+        prefixCounts[m[1]] = (prefixCounts[m[1]] || 0) + 1;
+      }
+      const detectedPrefix = Object.entries(prefixCounts).sort((a, b) => b[1] - a[1])[0][0];
+
+      const matchesForPrefix = matches.filter((m) => m[1] === detectedPrefix);
+      const detectedExt = matchesForPrefix[0][3];
+      const numbers = matchesForPrefix.map((m) => Number(m[2]));
+      const detectedStart = Math.min(...numbers);
+
+      onChange({
+        ...config,
+        folderPath,
+        prefix: detectedPrefix,
+        extension: detectedExt,
+        startNumber: String(detectedStart),
+      });
+    } else {
+      onChange({ ...config, folderPath });
     }
   };
 
@@ -109,15 +139,72 @@ export default function AttachmentSetup({ navigate, config, onChange, rowCount }
               )}
             </div>
 
+            {/* Row range (start / stop) */}
+            {onEmailConfigChange && (
+              <div className="bg-white border border-slate-200 rounded-xl p-5 mb-5">
+                <h2 className="font-semibold text-slate-900 mb-1">Row Range</h2>
+                <p className="text-slate-500 text-sm mb-4">
+                  Which spreadsheet rows to process.{' '}
+                  {totalRows > 0 && (
+                    <span>Sheet has <strong>{totalRows}</strong> data rows.</span>
+                  )}
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Start Row</label>
+                    <input
+                      type="number"
+                      min={2}
+                      value={emailConfig?.startRow ?? 2}
+                      onChange={(e) => onEmailConfigChange({ ...emailConfig, startRow: e.target.value })}
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">Row 1 is the header</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">End Row</label>
+                    <input
+                      type="number"
+                      min={2}
+                      value={emailConfig?.endRow ?? ''}
+                      placeholder={totalRows ? String(totalRows + 1) : 'Last row'}
+                      onChange={(e) => onEmailConfigChange({ ...emailConfig, endRow: e.target.value })}
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">Leave blank for all rows</p>
+                  </div>
+                </div>
+                {rowCount > 0 && (
+                  <p className="text-sm text-indigo-600 font-medium mt-3">
+                    {rowCount} recipient{rowCount !== 1 ? 's' : ''} selected
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* File naming config */}
             <div className="bg-white border border-slate-200 rounded-xl p-5 mb-5">
               <h2 className="font-semibold text-slate-900 mb-1">File Naming Pattern</h2>
-              <p className="text-slate-500 text-sm mb-4">
-                Files are matched sequentially: Row {Number(config.startNumber || 1)} maps to{' '}
-                <code className="bg-slate-100 px-1 rounded text-xs">
-                  {config.prefix}{config.startNumber}.{config.extension}
-                </code>
-              </p>
+              {rowCount > 0 && config.prefix && config.extension ? (
+                <p className="text-slate-500 text-sm mb-4">
+                  Files:{' '}
+                  <code className="bg-slate-100 px-1 rounded text-xs">
+                    {config.prefix}{config.startNumber}.{config.extension}
+                  </code>
+                  {' '}→{' '}
+                  <code className="bg-slate-100 px-1 rounded text-xs">
+                    {config.prefix}{Number(config.startNumber) + rowCount - 1}.{config.extension}
+                  </code>
+                  <span className="ml-2 text-slate-400">({rowCount} files)</span>
+                </p>
+              ) : (
+                <p className="text-slate-500 text-sm mb-4">
+                  Files are matched sequentially: first row maps to{' '}
+                  <code className="bg-slate-100 px-1 rounded text-xs">
+                    {config.prefix}{config.startNumber}.{config.extension}
+                  </code>
+                </p>
+              )}
 
               <div className="grid grid-cols-3 gap-4">
                 <div>

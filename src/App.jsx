@@ -94,6 +94,9 @@ export default function App() {
             config={attachmentConfig}
             onChange={setAttachmentConfig}
             rowCount={getSelectedRows().length}
+            emailConfig={emailConfig}
+            onEmailConfigChange={setEmailConfig}
+            totalRows={sheetFile?.rows?.length ?? 0}
           />
         );
 

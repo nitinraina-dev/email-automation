@@ -1,6 +1,6 @@
 {
   "name": "email-automation",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local Gmail email automation desktop app",
   "main": "electron/main.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "electron": "electron ."
   },
   "dependencies": {
+    "electron-updater": "^6.8.3",
     "googleapis": "^144.0.0",
     "xlsx": "^0.18.5"
   },

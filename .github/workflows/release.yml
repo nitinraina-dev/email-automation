@@ -43,6 +43,8 @@ jobs:
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/*.${{ matrix.ext }}
+          files: |
+            release/*.${{ matrix.ext }}
+            release/latest*.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
