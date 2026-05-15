@@ -86,23 +86,31 @@ module.exports = function (ipcMain, getMainWindow, shell, storageBase) {
           return;
         }
 
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(`
-          <html><body style="font-family:sans-serif;text-align:center;padding:60px">
-            <h2 style="color:#16a34a">✓ Gmail connected successfully</h2>
-            <p>You can close this tab and return to Email Automation.</p>
-          </body></html>
-        `);
-
         clearTimeout(timeout);
         server.close();
 
         try {
           const { tokens } = await auth.getToken(code);
           auth.setCredentials(tokens);
+          fs.mkdirSync(path.dirname(tokenPath), { recursive: true });
           fs.writeFileSync(tokenPath, JSON.stringify(tokens, null, 2));
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(`
+            <html><body style="font-family:sans-serif;text-align:center;padding:60px">
+              <h2 style="color:#16a34a">✓ Gmail connected successfully</h2>
+              <p>You can close this tab and return to Email Automation.</p>
+            </body></html>
+          `);
           resolve({ success: true });
         } catch (err) {
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(`
+            <html><body style="font-family:sans-serif;text-align:center;padding:60px">
+              <h2 style="color:#e11d48">✗ Connection failed</h2>
+              <p style="color:#64748b">${err.message}</p>
+              <p style="color:#64748b">Check that your redirect URI is set to <code>http://localhost:4242/callback</code> and your app type is <strong>Desktop app</strong> in Google Cloud Console.</p>
+            </body></html>
+          `);
           reject(err);
         }
       });
