@@ -35,6 +35,26 @@ Windows may show "Windows protected your PC". Click **More info → Run anyway**
 
 ---
 
+## Installing an Update
+
+You do **not** need to uninstall or delete the old version first.
+
+### Mac
+1. Download the new `.dmg` from [Releases](../../releases/latest)
+2. Open the `.dmg` and drag **Email Automation** to Applications — click **Replace** when prompted
+3. If you see "damaged and can't be opened", run in Terminal:
+   ```bash
+   xattr -cr "/Applications/Email Automation.app"
+   ```
+4. Open the app normally
+
+### Windows
+1. Download the new `Setup.exe` from [Releases](../../releases/latest)
+2. Run the installer — it overwrites the old version automatically
+3. If SmartScreen appears, click **More info → Run anyway**
+
+---
+
 ## First-Time Setup — Connect Gmail
 
 The app needs Google OAuth credentials to access your Gmail account. This is a one-time setup.
