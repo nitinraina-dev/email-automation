@@ -49,8 +49,9 @@ module.exports = function (ipcMain, getMainWindow, shell, storageBase) {
       const gmail = google.gmail({ version: 'v1', auth });
       const profile = await gmail.users.getProfile({ userId: 'me' });
       return { authenticated: true, email: profile.data.emailAddress };
-    } catch {
-      return { authenticated: false, reason: 'invalid_token' };
+    } catch (err) {
+      const message = err?.response?.data?.error_description || err?.response?.data?.error || err?.message || 'unknown';
+      return { authenticated: false, reason: 'api_error', detail: message };
     }
   });
 

@@ -34,7 +34,12 @@ export default function SettingsPage({ authState, onAuthChange }) {
       const result = await window.api?.authenticate();
       if (result?.success) {
         const authCheck = await window.api?.checkAuth();
-        onAuthChange({ authenticated: authCheck.authenticated, email: authCheck.email || '' });
+        if (authCheck.authenticated) {
+          onAuthChange({ authenticated: true, email: authCheck.email || '' });
+        } else {
+          const detail = authCheck.detail ? ` (${authCheck.detail})` : '';
+          setError(`Token saved but Gmail API check failed${detail}. Make sure the Gmail API is enabled in your Google Cloud project.`);
+        }
       } else {
         setError('Authentication failed. Please try again.');
       }
